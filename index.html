@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#111827" />
-  <title>Calculadora de Soles</title>
+  <title>Mis Herramientas</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -17,6 +17,8 @@
       --danger: #ef4444;
       --border: #e5e7eb;
       --ring: rgba(37, 99, 235, 0.2);
+      --accent-bg: rgba(22, 163, 74, 0.1);
+      --accent-border: rgba(22, 163, 74, 0.3);
       --radius: 14px;
       --shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
@@ -29,6 +31,8 @@
         --border: #182033;
         --shadow: 0 1px 2px rgba(0,0,0,0.5);
         --ring: rgba(59,130,246,0.25);
+        --accent-bg: rgba(22, 163, 74, 0.15);
+        --accent-border: rgba(22, 163, 74, 0.4);
       }
     }
     * { box-sizing: border-box; }
@@ -38,10 +42,19 @@
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
       -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-      display: grid; place-items: center; padding: 24px;
+      padding: 24px;
     }
+
+    /* Contenedor principal para centrar todo */
+    .wrapper {
+      max-width: 640px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+
     .card {
-      width: 100%; max-width: 560px;
+      width: 100%;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -61,17 +74,17 @@
     .field-head {
       display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     }
-    label { color: var(--muted); font-size: 14px; }
+    label { color: var(--muted); font-size: 14px; font-weight: 500; }
     .control { position: relative; display: flex; align-items: center; }
-    input[type="text"] {
+    input[type="text"], input[type="number"] {
       width: 100%; padding: 14px 14px;
       border: 1px solid var(--border); background: transparent;
       border-radius: 12px; color: var(--text);
       font-size: 16px; line-height: 1; outline: none;
       transition: border-color .18s ease, box-shadow .18s ease;
     }
-    input[type="text"]::placeholder { color: #9aa3af80; }
-    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    input::placeholder { color: #9aa3af80; }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
     .suffix {
       position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
       font-size: 12px; color: var(--muted); pointer-events: none;
@@ -104,81 +117,203 @@
       font-size: clamp(26px, 4.5vw, 34px); color: var(--accent);
     }
     .meta { font-size: 13px; color: var(--muted); }
-    .actions { display: flex; gap: 8px; margin-top: 2px; }
+    .actions { display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
+
+    /* --- COMPARADOR DE PRODUCTOS --- */
+    .productos { display: grid; gap: 16px; }
+    .producto {
+      background: transparent;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.25s ease;
+    }
+    .producto.mejor {
+      background: var(--accent-bg);
+      border-color: var(--accent-border);
+      border-width: 2px;
+    }
+    .producto h3 {
+      color: var(--text);
+      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .resultado-comparador {
+      background: transparent;
+      padding: 14px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .precio-unidad {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .unidad-texto {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .mejor .resultado-comparador {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      border-width: 2px;
+    }
+    .mejor .precio-unidad {
+      color: var(--accent);
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 30px 0;
+    }
 
     .footer { margin-top: 12px; text-align: center; font-size: 12px; color: var(--muted); }
 
+    @media (max-width: 500px) {
+      .input-group { grid-template-columns: 1fr; }
+    }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
-    <div class="header">
-      <div class="title">Calculadora de Soles</div>
-      <div class="subtle" id="bcvUpdated">—</div>
-    </div>
+  <div class="wrapper">
+    
+    <!-- ==================== CALCULADORA DE SOLES ==================== -->
+    <main class="card" role="main">
+      <div class="header">
+        <div class="title">💱 Calculadora de Soles</div>
+        <div class="subtle" id="bcvUpdated">—</div>
+      </div>
 
-    <form class="form" autocomplete="off" onsubmit="return false">
-      <div class="field" id="wrap-bcv">
-        <div class="field-head">
-          <label for="bcvRate">Tasa BCV (USD/VES)</label>
-          <div style="display:inline-flex; gap:8px; flex-wrap:wrap;">
-            <button id="fetchBCVBtn" type="button" class="btn sm primary" title="Obtener automáticamente desde el BCV">⟳ Actualizar</button>
-            <a id="bcvLink" class="btn sm link" href="https://www.bcv.org.ve/glosario/cambio-oficial" target="_blank" rel="noopener noreferrer" title="Abrir sitio del BCV (nueva pestaña)">Ver BCV ↗</a>
+      <form class="form" autocomplete="off" onsubmit="return false">
+        <div class="field" id="wrap-bcv">
+          <div class="field-head">
+            <label for="bcvRate">Tasa BCV (USD/VES)</label>
+            <div style="display:inline-flex; gap:8px; flex-wrap:wrap;">
+              <button id="fetchBCVBtn" type="button" class="btn sm primary" title="Obtener automáticamente desde el BCV">⟳ Actualizar</button>
+              <a id="bcvLink" class="btn sm link" href="https://www.bcv.org.ve/glosario/cambio-oficial" target="_blank" rel="noopener noreferrer" title="Abrir sitio del BCV (nueva pestaña)">Ver BCV ↗</a>
+            </div>
+          </div>
+          <div class="control">
+            <input id="bcvRate" type="text" inputmode="decimal" placeholder="Ej: 231.04620000" aria-describedby="bcvNote" spellcheck="false" />
+            <span class="suffix">USD → VES</span>
+          </div>
+          <div id="bcvNote" class="note">Se obtiene automáticamente. Puedes editarla.</div>
+        </div>
+
+        <div class="field" id="wrap-company">
+          <label for="companyRate">Tasa de la empresa (VES/PEN)</label>
+          <div class="control">
+            <input id="companyRate" type="text" inputmode="decimal" placeholder="Ej: 0.00002010" aria-describedby="companyNote" spellcheck="false" />
+            <span class="suffix">VES → PEN</span>
+          </div>
+          <div id="companyNote" class="note">Bolívares por 1 sol.</div>
+        </div>
+
+        <div class="field" id="wrap-usd">
+          <label for="usdAmount">Monto a enviar (USD)</label>
+          <div class="control">
+            <input id="usdAmount" type="text" inputmode="decimal" placeholder="Ej: 500" aria-describedby="usdNote" spellcheck="false" />
+            <span class="suffix">USD</span>
+          </div>
+          <div id="usdNote" class="note">Cantidad de USD a transferir.</div>
+        </div>
+      </form>
+
+      <section class="result" aria-live="polite">
+        <div class="label">Monto en soles a transferir</div>
+        <div class="value" id="resultValue">—</div>
+        <div class="meta" id="implicitRate">(Tasa implícita: 1 USD = — PEN)</div>
+        <div class="actions">
+          <button class="btn primary" id="copyBtn" type="button">Copiar resultado</button>
+          <button class="btn" id="resetBtn" type="button">Limpiar</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== COMPARADOR DE PRODUCTOS ==================== -->
+    <section class="card">
+      <div class="header">
+        <div class="title">🛒 Comparador de Productos</div>
+      </div>
+      <p class="note" style="margin-bottom: 16px;">Descubre cuál producto tiene mejor precio por gramo</p>
+
+      <div class="productos">
+        <!-- Producto 1 -->
+        <div class="producto" id="producto1">
+          <h3>Producto 1</h3>
+          <div class="input-group">
+            <div class="field">
+              <label for="cantidad1">Cantidad</label>
+              <input type="number" id="cantidad1" placeholder="250" value="250" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="precio1">Precio (S/)</label>
+              <input type="number" id="precio1" placeholder="10" value="10" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="resultado-comparador">
+            <div class="precio-unidad" id="resultado1">S/ 0.00</div>
+            <div class="unidad-texto">por gramo</div>
           </div>
         </div>
-        <div class="control">
-          <input id="bcvRate" type="text" inputmode="decimal" placeholder="Ej: 231.04620000" aria-describedby="bcvNote" spellcheck="false" />
-          <span class="suffix">USD → VES</span>
-        </div>
-        <div id="bcvNote" class="note">Se obtiene automáticamente. Puedes editarla.</div>
-      </div>
 
-      <div class="field" id="wrap-company">
-        <label for="companyRate">Tasa de la empresa (VES/PEN)</label>
-        <div class="control">
-          <input id="companyRate" type="text" inputmode="decimal" placeholder="Ej: 0.00002010" aria-describedby="companyNote" spellcheck="false" />
-          <span class="suffix">VES → PEN</span>
+        <!-- Producto 2 -->
+        <div class="producto" id="producto2">
+          <h3>Producto 2</h3>
+          <div class="input-group">
+            <div class="field">
+              <label for="cantidad2">Cantidad</label>
+              <input type="number" id="cantidad2" placeholder="500" value="500" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="precio2">Precio (S/)</label>
+              <input type="number" id="precio2" placeholder="60" value="60" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="resultado-comparador">
+            <div class="precio-unidad" id="resultado2">S/ 0.00</div>
+            <div class="unidad-texto">por gramo</div>
+          </div>
         </div>
-        <div id="companyNote" class="note">Bolívares por 1 sol.</div>
-      </div>
-
-      <div class="field" id="wrap-usd">
-        <label for="usdAmount">Monto a enviar (USD)</label>
-        <div class="control">
-          <input id="usdAmount" type="text" inputmode="decimal" placeholder="Ej: 500" aria-describedby="usdNote" spellcheck="false" />
-          <span class="suffix">USD</span>
-        </div>
-        <div id="usdNote" class="note">Cantidad de USD a transferir.</div>
-      </div>
-    </form>
-
-    <section class="result" aria-live="polite">
-      <div class="label">Monto en soles a transferir</div>
-      <div class="value" id="resultValue">—</div>
-      <div class="meta" id="implicitRate">(Tasa implícita: 1 USD = — PEN)</div>
-      <div class="actions">
-        <button class="btn primary" id="copyBtn" type="button">Copiar resultado</button>
-        <button class="btn" id="resetBtn" type="button">Limpiar</button>
       </div>
     </section>
 
     <p class="footer">Tus datos se guardan localmente. Dark mode automático.</p>
-  </main>
+  </div>
 
   <script>
-    // Endpoints correctos (solo 200). Se descartan endpoints 400/500.
+    // ==================== CALCULADORA DE SOLES ====================
     const RACE_URLS = [
       'https://r.jina.ai/https://www.bcv.org.ve/glosario/cambio-oficial',
       'https://r.jina.ai/http://www.bcv.org.ve/glosario/cambio-oficial',
     ];
     const FETCH_TIMEOUT_MS = 7000;
 
-    // Formatters
     const fmtPEN = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 2 });
     const fmt6   = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
 
-    // Parsing
     function parseLocaleNumber(value) {
       if (typeof value === 'number') return value;
       const s = (value || '').toString().trim();
@@ -203,14 +338,12 @@
     };
     const isPlausibleRate = (val, decs) => val > 0.01 && val < 5000 && decs >= 2;
 
-    // Formato fijo a 8 decimales (ej. 231.04620000)
     function formatRate(n) {
       const num = Number(n);
       if (!Number.isFinite(num) || num <= 0) return '';
       return num.toFixed(8);
     }
 
-    // Detección en HTML del BCV
     function detectBCVFromDOM(html) {
       try {
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -225,7 +358,6 @@
             if (isPlausibleRate(val, decs)) return { value: val, token: txt, source: 'dom' };
           }
         }
-        // Fallback genérico dentro del bloque
         const strong = doc.querySelector('.recuadrotsmc .centrado strong') || doc.querySelector('.recuadrotsmc strong');
         if (strong) {
           const txt = strong.textContent.trim();
@@ -237,11 +369,9 @@
       return null;
     }
 
-    // Detección en texto plano (por si algún proxy aplana HTML)
     function detectBCVFromText(text) {
       if (!text) return null;
       const norm = text.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
-
       let m = /USD[\s\S]{0,120}?((?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[.,]\d{2,8}))/i.exec(norm);
       if (m) {
         const val = parseLocaleNumber(m[1]); const decs = decimalsIn(m[1]);
@@ -252,8 +382,6 @@
         const val = parseLocaleNumber(m[1]); const decs = decimalsIn(m[1]);
         if (isPlausibleRate(val, decs)) return { value: val, token: m[1], source: 'text-equals' };
       }
-
-      // Último recurso: número plausible cerca de palabras clave
       const rxNum = /(?:(?:\d{1,3}(?:[.,\s]\d{3})+)|\d+)(?:[.,]\d+)?/g;
       const kws = ['usd','bcv','cambio','oficial','ves','bs'];
       const candidates = [];
@@ -279,7 +407,6 @@
       return detectBCVFromDOM(text) || detectBCVFromText(text);
     }
 
-    // DOM
     const el = {
       bcv: document.getElementById('bcvRate'),
       company: document.getElementById('companyRate'),
@@ -299,7 +426,6 @@
     };
     const originalBcvNote = el.bcvNote.textContent;
 
-    // Storage
     const STORAGE_KEY = 'calc-soles-v1';
     function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; } }
     function saveState(extra = {}) {
@@ -307,7 +433,6 @@
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
     }
 
-    // Cálculo
     function calculate() {
       const bcv = parseLocaleNumber(el.bcv.value);
       const company = parseLocaleNumber(el.company.value);
@@ -325,14 +450,13 @@
         return;
       }
 
-      const implicit = bcv / company; // USD → PEN
+      const implicit = bcv / company;
       const pen = implicit * usd;
 
       el.resultValue.textContent = isFinite(pen) ? fmtPEN.format(pen) : '—';
       el.implicit.textContent = `(Tasa implícita: 1 USD = ${fmt6.format(implicit)} PEN)`;
     }
 
-    // Fetch con carrera paralela (solo 200) + timeout + aborto de perdedores
     async function fetchBCVRate(silent = false) {
       const setLoading = (on) => {
         if (!silent) {
@@ -380,11 +504,8 @@
 
       let winner = null;
       try {
-        // Similar a Promise.any, pero con aborto manual de perdedores
         winner = await Promise.any(promises);
-      } catch {
-        // Todos fallaron
-      }
+      } catch {}
 
       if (winner?.value > 0) {
         el.bcv.value = formatRate(winner.value);
@@ -398,7 +519,7 @@
         return winner.value;
       } else {
         if (!silent) {
-          el.bcvNote.textContent = 'No se pudo obtener automáticamente. Usa “Ver BCV”.';
+          el.bcvNote.textContent = 'No se pudo obtener automáticamente. Usa "Ver BCV".';
           setTimeout(() => { el.bcvNote.textContent = originalBcvNote; }, 2600);
         }
         setLoading(false);
@@ -406,7 +527,6 @@
       }
     }
 
-    // Eventos
     ['input', 'change'].forEach(ev => {
       el.bcv.addEventListener(ev, () => { calculate(); saveState(); });
       el.company.addEventListener(ev, () => { calculate(); saveState(); });
@@ -432,7 +552,6 @@
       calculate();
     });
 
-    // Init
     (async function init() {
       const state = loadState();
       if (!state.bcv) state.bcv = '231.04620000';
@@ -448,281 +567,62 @@
       }
 
       calculate();
-      // Obtención silenciosa al cargar
       fetchBCVRate(true);
     })();
+
+    // ==================== COMPARADOR DE PRODUCTOS ====================
+    const cantidad1 = document.getElementById('cantidad1');
+    const precio1 = document.getElementById('precio1');
+    const cantidad2 = document.getElementById('cantidad2');
+    const precio2 = document.getElementById('precio2');
+    const resultado1 = document.getElementById('resultado1');
+    const resultado2 = document.getElementById('resultado2');
+    const producto1Div = document.getElementById('producto1');
+    const producto2Div = document.getElementById('producto2');
+
+    function calcularYComparar() {
+      const cant1 = parseFloat(cantidad1.value) || 0;
+      const prec1 = parseFloat(precio1.value) || 0;
+      const cant2 = parseFloat(cantidad2.value) || 0;
+      const prec2 = parseFloat(precio2.value) || 0;
+
+      const precioUnidad1 = cant1 > 0 ? prec1 / cant1 : 0;
+      const precioUnidad2 = cant2 > 0 ? prec2 / cant2 : 0;
+
+      resultado1.textContent = `S/ ${precioUnidad1.toFixed(4)}`;
+      resultado2.textContent = `S/ ${precioUnidad2.toFixed(4)}`;
+
+      producto1Div.classList.remove('mejor');
+      producto2Div.classList.remove('mejor');
+
+      const badge1 = producto1Div.querySelector('.badge');
+      const badge2 = producto2Div.querySelector('.badge');
+      if (badge1) badge1.remove();
+      if (badge2) badge2.remove();
+
+      if (precioUnidad1 > 0 && precioUnidad2 > 0) {
+        if (precioUnidad1 < precioUnidad2) {
+          producto1Div.classList.add('mejor');
+          const badge = document.createElement('div');
+          badge.className = 'badge';
+          badge.textContent = '✓ Mejor opción';
+          producto1Div.querySelector('.resultado-comparador').appendChild(badge);
+        } else if (precioUnidad2 < precioUnidad1) {
+          producto2Div.classList.add('mejor');
+          const badge = document.createElement('div');
+          badge.className = 'badge';
+          badge.textContent = '✓ Mejor opción';
+          producto2Div.querySelector('.resultado-comparador').appendChild(badge);
+        }
+      }
+    }
+
+    cantidad1.addEventListener('input', calcularYComparar);
+    precio1.addEventListener('input', calcularYComparar);
+    cantidad2.addEventListener('input', calcularYComparar);
+    precio2.addEventListener('input', calcularYComparar);
+
+    calcularYComparar();
   </script>
 </body>
-
-
-   <title>Comparador de Productos</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .productos {
-            display: grid;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .producto {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-            border: 3px solid transparent;
-        }
-
-        .producto.mejor {
-            background: #d4edda;
-            border-color: #28a745;
-            transform: scale(1.02);
-        }
-
-        .producto h2 {
-            color: #555;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .input-wrapper {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        input {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border 0.3s ease;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: #667eea;
-        }
-
-        .resultado {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .precio-unidad {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .unidad-texto {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-        }
-
-        .mejor .resultado {
-            background: #28a745;
-            color: white;
-        }
-
-        .mejor .precio-unidad {
-            color: white;
-        }
-
-        .mejor .unidad-texto {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .badge {
-            display: inline-block;
-            background: #28a745;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 500px) {
-            .container {
-                padding: 25px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .input-group {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🛒 Comparador de Productos</h1>
-        <p class="subtitle">Descubre cuál producto tiene mejor precio por unidad</p>
-
-        <div class="productos">
-            <!-- Producto 1 -->
-            <div class="producto" id="producto1">
-                <h2>Producto 1</h2>
-                <div class="input-group">
-                    <div class="input-wrapper">
-                        <label for="cantidad1">Cantidad (g, ml, unidades)</label>
-                        <input type="number" id="cantidad1" placeholder="250" value="250" min="0" step="any">
-                    </div>
-                    <div class="input-wrapper">
-                        <label for="precio1">Precio (S/)</label>
-                        <input type="number" id="precio1" placeholder="10" value="10" min="0" step="0.01">
-                    </div>
-                </div>
-                <div class="resultado">
-                    <div class="precio-unidad" id="resultado1">S/ 0.00</div>
-                    <div class="unidad-texto">por unidad</div>
-                </div>
-            </div>
-
-            <!-- Producto 2 -->
-            <div class="producto" id="producto2">
-                <h2>Producto 2</h2>
-                <div class="input-group">
-                    <div class="input-wrapper">
-                        <label for="cantidad2">Cantidad (g, ml, unidades)</label>
-                        <input type="number" id="cantidad2" placeholder="500" value="500" min="0" step="any">
-                    </div>
-                    <div class="input-wrapper">
-                        <label for="precio2">Precio (S/)</label>
-                        <input type="number" id="precio2" placeholder="60" value="60" min="0" step="0.01">
-                    </div>
-                </div>
-                <div class="resultado">
-                    <div class="precio-unidad" id="resultado2">S/ 0.00</div>
-                    <div class="unidad-texto">por unidad</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Obtener elementos
-        const cantidad1 = document.getElementById('cantidad1');
-        const precio1 = document.getElementById('precio1');
-        const cantidad2 = document.getElementById('cantidad2');
-        const precio2 = document.getElementById('precio2');
-        const resultado1 = document.getElementById('resultado1');
-        const resultado2 = document.getElementById('resultado2');
-        const producto1Div = document.getElementById('producto1');
-        const producto2Div = document.getElementById('producto2');
-
-        // Función para calcular y comparar
-        function calcularYComparar() {
-            // Obtener valores
-            const cant1 = parseFloat(cantidad1.value) || 0;
-            const prec1 = parseFloat(precio1.value) || 0;
-            const cant2 = parseFloat(cantidad2.value) || 0;
-            const prec2 = parseFloat(precio2.value) || 0;
-
-            // Calcular precio por unidad
-            const precioUnidad1 = cant1 > 0 ? prec1 / cant1 : 0;
-            const precioUnidad2 = cant2 > 0 ? prec2 / cant2 : 0;
-
-            // Mostrar resultados
-            resultado1.textContent = `S/ ${precioUnidad1.toFixed(4)}`;
-            resultado2.textContent = `S/ ${precioUnidad2.toFixed(4)}`;
-
-            // Quitar clases anteriores
-            producto1Div.classList.remove('mejor');
-            producto2Div.classList.remove('mejor');
-
-            // Remover badges existentes
-            const badge1 = producto1Div.querySelector('.badge');
-            const badge2 = producto2Div.querySelector('.badge');
-            if (badge1) badge1.remove();
-            if (badge2) badge2.remove();
-
-            // Destacar el mejor (solo si ambos tienen valores válidos)
-            if (precioUnidad1 > 0 && precioUnidad2 > 0) {
-                if (precioUnidad1 < precioUnidad2) {
-                    producto1Div.classList.add('mejor');
-                    const badge = document.createElement('div');
-                    badge.className = 'badge';
-                    badge.textContent = '✓ Mejor opción';
-                    producto1Div.querySelector('.resultado').appendChild(badge);
-                } else if (precioUnidad2 < precioUnidad1) {
-                    producto2Div.classList.add('mejor');
-                    const badge = document.createElement('div');
-                    badge.className = 'badge';
-                    badge.textContent = '✓ Mejor opción';
-                    producto2Div.querySelector('.resultado').appendChild(badge);
-                }
-            }
-        }
-
-        // Escuchar cambios en todos los inputs (actualización automática)
-        cantidad1.addEventListener('input', calcularYComparar);
-        precio1.addEventListener('input', calcularYComparar);
-        cantidad2.addEventListener('input', calcularYComparar);
-        precio2.addEventListener('input', calcularYComparar);
-
-        // Calcular al cargar la página
-        calcularYComparar();
-    </script>
-</body>
-
 </html>
