@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Calculadora de Soles</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --accent: #16a34a;
+      --danger: #ef4444;
+      --border: #e5e7eb;
+      --ring: rgba(37, 99, 235, 0.2);
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --card: #0e1628;
+        --text: #e5e7eb;
+        --muted: #9aa4b2;
+        --border: #182033;
+        --shadow: 0 1px 2px rgba(0,0,0,0.5);
+        --ring: rgba(59,130,246,0.25);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      display: grid; place-items: center; padding: 24px;
+    }
+    .card {
+      width: 100%; max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 20px;
+    }
+    .header {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px;
+    }
+    .title {
+      font-weight: 700; letter-spacing: -0.02em;
+      font-size: clamp(18px, 2.2vw, 22px);
+    }
+    .subtle { color: var(--muted); font-size: 12px; }
+    .form { display: grid; gap: 18px; margin-top: 10px; }
+    .field { display: grid; gap: 8px; }
+    .field-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+    label { color: var(--muted); font-size: 14px; }
+    .control { position: relative; display: flex; align-items: center; }
+    input[type="text"] {
+      width: 100%; padding: 14px 14px;
+      border: 1px solid var(--border); background: transparent;
+      border-radius: 12px; color: var(--text);
+      font-size: 16px; line-height: 1; outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    input[type="text"]::placeholder { color: #9aa3af80; }
+    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    .suffix {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: var(--muted); pointer-events: none;
+      padding: 4px 8px; border-radius: 8px; background: transparent; border: 1px solid var(--border);
+    }
+    .note { font-size: 12px; color: var(--muted); }
+    .invalid input { border-color: var(--danger); }
+    .invalid input:focus { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); }
+
+    .btn {
+      appearance: none; cursor: pointer; border-radius: 10px; line-height: 1; display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; padding: 10px 12px; border: 1px solid var(--border); background: transparent; color: var(--text);
+      transition: background .18s ease, border-color .18s ease, transform .05s ease;
+      text-decoration: none;
+    }
+    .btn:hover { background: rgba(148,163,184,0.08); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { border-color: rgba(37,99,235,0.35); background: rgba(37,99,235,0.08); color: var(--text); }
+    .btn.link { color: var(--primary); border-color: rgba(37,99,235,0.25); }
+    .btn.sm { padding: 8px 10px; font-size: 12px; border-radius: 8px; }
+
+    .result {
+      margin-top: 6px; padding: 16px;
+      border: 1px solid var(--border); border-radius: 12px;
+      display: grid; gap: 6px; background: transparent;
+    }
+    .result .label { font-size: 12px; color: var(--muted); }
+    .result .value {
+      font-weight: 800; letter-spacing: -0.02em;
+      font-size: clamp(26px, 4.5vw, 34px); color: var(--accent);
+    }
+    .meta { font-size: 13px; color: var(--muted); }
+    .actions { display: flex; gap: 8px; margin-top: 2px; }
+
+    .footer { margin-top: 12px; text-align: center; font-size: 12px; color: var(--muted); }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <div class="header">
+      <div class="title">Calculadora de Soles</div>
+      <div class="subtle" id="bcvUpdated">—</div>
+    </div>
+
+    <form class="form" autocomplete="off" onsubmit="return false">
+      <div class="field" id="wrap-bcv">
+        <div class="field-head">
+          <label for="bcvRate">Tasa BCV (USD/VES)</label>
+          <div style="display:inline-flex; gap:8px; flex-wrap:wrap;">
+            <button id="fetchBCVBtn" type="button" class="btn sm primary" title="Obtener automáticamente desde el BCV">⟳ Actualizar</button>
+            <a id="bcvLink" class="btn sm link" href="https://www.bcv.org.ve/glosario/cambio-oficial" target="_blank" rel="noopener noreferrer" title="Abrir sitio del BCV (nueva pestaña)">Ver BCV ↗</a>
+          </div>
+        </div>
+        <div class="control">
+          <input id="bcvRate" type="text" inputmode="decimal" placeholder="Ej: 231.04620000" aria-describedby="bcvNote" spellcheck="false" />
+          <span class="suffix">USD → VES</span>
+        </div>
+        <div id="bcvNote" class="note">Se obtiene automáticamente. Puedes editarla.</div>
+      </div>
+
+      <div class="field" id="wrap-company">
+        <label for="companyRate">Tasa de la empresa (VES/PEN)</label>
+        <div class="control">
+          <input id="companyRate" type="text" inputmode="decimal" placeholder="Ej: 0.00002010" aria-describedby="companyNote" spellcheck="false" />
+          <span class="suffix">VES → PEN</span>
+        </div>
+        <div id="companyNote" class="note">Bolívares por 1 sol.</div>
+      </div>
+
+      <div class="field" id="wrap-usd">
+        <label for="usdAmount">Monto a enviar (USD)</label>
+        <div class="control">
+          <input id="usdAmount" type="text" inputmode="decimal" placeholder="Ej: 500" aria-describedby="usdNote" spellcheck="false" />
+          <span class="suffix">USD</span>
+        </div>
+        <div id="usdNote" class="note">Cantidad de USD a transferir.</div>
+      </div>
+    </form>
+
+    <section class="result" aria-live="polite">
+      <div class="label">Monto en soles a transferir</div>
+      <div class="value" id="resultValue">—</div>
+      <div class="meta" id="implicitRate">(Tasa implícita: 1 USD = — PEN)</div>
+      <div class="actions">
+        <button class="btn primary" id="copyBtn" type="button">Copiar resultado</button>
+        <button class="btn" id="resetBtn" type="button">Limpiar</button>
+      </div>
+    </section>
+
+    <p class="footer">Tus datos se guardan localmente. Dark mode automático.</p>
+  </main>
+
+  <script>
+    // Endpoints correctos (solo 200). Se descartan endpoints 400/500.
+    const RACE_URLS = [
+      'https://r.jina.ai/https://www.bcv.org.ve/glosario/cambio-oficial',
+      'https://r.jina.ai/http://www.bcv.org.ve/glosario/cambio-oficial',
+    ];
+    const FETCH_TIMEOUT_MS = 7000;
+
+    // Formatters
+    const fmtPEN = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 2 });
+    const fmt6   = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+
+    // Parsing
+    function parseLocaleNumber(value) {
+      if (typeof value === 'number') return value;
+      const s = (value || '').toString().trim();
+      if (!s) return NaN;
+      const hasComma = s.includes(',');
+      const hasDot   = s.includes('.');
+      let dec = '.';
+      if (hasComma && hasDot) dec = s.lastIndexOf(',') > s.lastIndexOf('.') ? ',' : '.';
+      else if (hasComma) dec = ',';
+      const re = new RegExp('[^0-9\\' + dec + '\\-]', 'g');
+      const cleaned = s.replace(re, '');
+      const parts = cleaned.split(dec);
+      if (parts.length === 1) return parseFloat(parts[0].replace(/[^\d\-]/g, ''));
+      const integer = parts.slice(0, -1).join('').replace(/[^\d\-]/g, '');
+      const decimal = parts[parts.length - 1].replace(/\D/g, '');
+      const n = parseFloat(integer + '.' + decimal);
+      return Number.isFinite(n) ? n : NaN;
+    }
+    const decimalsIn = (token) => {
+      const m = (token || '').toString().match(/[.,](\d+)/);
+      return m ? m[1].length : 0;
+    };
+    const isPlausibleRate = (val, decs) => val > 0.01 && val < 5000 && decs >= 2;
+
+    // Formato fijo a 8 decimales (ej. 231.04620000)
+    function formatRate(n) {
+      const num = Number(n);
+      if (!Number.isFinite(num) || num <= 0) return '';
+      return num.toFixed(8);
+    }
+
+    // Detección en HTML del BCV
+    function detectBCVFromDOM(html) {
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const rows = doc.querySelectorAll('.row.recuadrotsmc, .recuadrotsmc');
+        for (const row of rows) {
+          if (!/USD/i.test(row.textContent || '')) continue;
+          const node = row.querySelector('.centrado strong') || row.querySelector('strong, b');
+          if (node && node.textContent) {
+            const txt = node.textContent.trim();
+            const val = parseLocaleNumber(txt);
+            const decs = decimalsIn(txt);
+            if (isPlausibleRate(val, decs)) return { value: val, token: txt, source: 'dom' };
+          }
+        }
+        // Fallback genérico dentro del bloque
+        const strong = doc.querySelector('.recuadrotsmc .centrado strong') || doc.querySelector('.recuadrotsmc strong');
+        if (strong) {
+          const txt = strong.textContent.trim();
+          const val = parseLocaleNumber(txt);
+          const decs = decimalsIn(txt);
+          if (isPlausibleRate(val, decs)) return { value: val, token: txt, source: 'dom-fallback' };
+        }
+      } catch {}
+      return null;
+    }
+
+    // Detección en texto plano (por si algún proxy aplana HTML)
+    function detectBCVFromText(text) {
+      if (!text) return null;
+      const norm = text.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
+
+      let m = /USD[\s\S]{0,120}?((?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[.,]\d{2,8}))/i.exec(norm);
+      if (m) {
+        const val = parseLocaleNumber(m[1]); const decs = decimalsIn(m[1]);
+        if (isPlausibleRate(val, decs)) return { value: val, token: m[1], source: 'text-window' };
+      }
+      m = /1\s*(?:USD|\$)\s*=\s*((?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[.,]\d{2,8}))/i.exec(norm);
+      if (m) {
+        const val = parseLocaleNumber(m[1]); const decs = decimalsIn(m[1]);
+        if (isPlausibleRate(val, decs)) return { value: val, token: m[1], source: 'text-equals' };
+      }
+
+      // Último recurso: número plausible cerca de palabras clave
+      const rxNum = /(?:(?:\d{1,3}(?:[.,\s]\d{3})+)|\d+)(?:[.,]\d+)?/g;
+      const kws = ['usd','bcv','cambio','oficial','ves','bs'];
+      const candidates = [];
+      let match;
+      while ((match = rxNum.exec(norm)) !== null) {
+        const token = match[0]; const idx = match.index;
+        const val = parseLocaleNumber(token); const decs = decimalsIn(token);
+        if (!Number.isFinite(val)) continue;
+        const ctx = norm.slice(Math.max(0, idx - 60), Math.min(norm.length, idx + token.length + 60)).toLowerCase();
+        let kwScore = 0; for (const k of kws) if (ctx.includes(k)) kwScore++;
+        let score = 0;
+        if (isPlausibleRate(val, decs)) score += 5;
+        if (decs >= 4) score += 2;
+        score += Math.min(kwScore, 3);
+        candidates.push({ value: val, token, score });
+      }
+      candidates.sort((a,b)=>b.score-a.score);
+      if (candidates[0] && candidates[0].score >= 5) return { value: candidates[0].value, token: candidates[0].token, source: 'text-general' };
+      return null;
+    }
+
+    function detectBCV(text) {
+      return detectBCVFromDOM(text) || detectBCVFromText(text);
+    }
+
+    // DOM
+    const el = {
+      bcv: document.getElementById('bcvRate'),
+      company: document.getElementById('companyRate'),
+      usd: document.getElementById('usdAmount'),
+      resultValue: document.getElementById('resultValue'),
+      implicit: document.getElementById('implicitRate'),
+      copy: document.getElementById('copyBtn'),
+      reset: document.getElementById('resetBtn'),
+      fetch: document.getElementById('fetchBCVBtn'),
+      bcvNote: document.getElementById('bcvNote'),
+      bcvUpdated: document.getElementById('bcvUpdated'),
+      wrap: {
+        bcv: document.getElementById('wrap-bcv'),
+        company: document.getElementById('wrap-company'),
+        usd: document.getElementById('wrap-usd'),
+      }
+    };
+    const originalBcvNote = el.bcvNote.textContent;
+
+    // Storage
+    const STORAGE_KEY = 'calc-soles-v1';
+    function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; } }
+    function saveState(extra = {}) {
+      const state = { bcv: el.bcv.value, company: el.company.value, usd: el.usd.value, ...extra };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+
+    // Cálculo
+    function calculate() {
+      const bcv = parseLocaleNumber(el.bcv.value);
+      const company = parseLocaleNumber(el.company.value);
+      const usd = parseLocaleNumber(el.usd.value);
+
+      [el.wrap.bcv, el.wrap.company, el.wrap.usd].forEach(w => w.classList.remove('invalid'));
+      let valid = true;
+      if (!(bcv > 0)) { el.wrap.bcv.classList.add('invalid'); valid = false; }
+      if (!(company > 0)) { el.wrap.company.classList.add('invalid'); valid = false; }
+      if (!(usd >= 0)) { el.wrap.usd.classList.add('invalid'); valid = false; }
+
+      if (!valid) {
+        el.resultValue.textContent = '—';
+        el.implicit.textContent = '(Tasa implícita: 1 USD = — PEN)';
+        return;
+      }
+
+      const implicit = bcv / company; // USD → PEN
+      const pen = implicit * usd;
+
+      el.resultValue.textContent = isFinite(pen) ? fmtPEN.format(pen) : '—';
+      el.implicit.textContent = `(Tasa implícita: 1 USD = ${fmt6.format(implicit)} PEN)`;
+    }
+
+    // Fetch con carrera paralela (solo 200) + timeout + aborto de perdedores
+    async function fetchBCVRate(silent = false) {
+      const setLoading = (on) => {
+        if (!silent) {
+          el.fetch.disabled = on;
+          el.fetch.textContent = on ? 'Buscando…' : '⟳ Actualizar';
+        }
+        el.bcvNote.textContent = on ? 'Obteniendo tasa del BCV…' : originalBcvNote;
+      };
+
+      setLoading(true);
+
+      const controllers = RACE_URLS.map(() => new AbortController());
+      let resolved = false;
+
+      const attempt = (url, i) => new Promise(async (resolve, reject) => {
+        const ctrl = controllers[i];
+        const timer = setTimeout(() => ctrl.abort('timeout'), FETCH_TIMEOUT_MS);
+        try {
+          const res = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-store',
+            redirect: 'follow',
+            signal: ctrl.signal,
+            headers: { 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }
+          });
+          if (!res.ok) return reject(new Error('HTTP ' + res.status));
+          const text = await res.text();
+          const found = detectBCV(text);
+          if (found?.value > 0) return resolve(found);
+          return reject(new Error('No se detectó tasa'));
+        } catch (e) {
+          return reject(e);
+        } finally {
+          clearTimeout(timer);
+        }
+      });
+
+      const promises = RACE_URLS.map((u, i) => attempt(u, i).then(found => {
+        if (resolved) return;
+        resolved = true;
+        controllers.forEach((c, j) => { if (j !== i) try { c.abort(); } catch {} });
+        return found;
+      }));
+
+      let winner = null;
+      try {
+        // Similar a Promise.any, pero con aborto manual de perdedores
+        winner = await Promise.any(promises);
+      } catch {
+        // Todos fallaron
+      }
+
+      if (winner?.value > 0) {
+        el.bcv.value = formatRate(winner.value);
+        const now = new Date();
+        el.bcvUpdated.textContent = `Actualizado ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+        el.bcvNote.textContent = 'Tasa actualizada desde BCV';
+        setTimeout(() => { el.bcvNote.textContent = originalBcvNote; }, 1600);
+        calculate();
+        saveState({ fetchedAt: Date.now(), fetchedFrom: 'r.jina.ai', method: winner.source });
+        setLoading(false);
+        return winner.value;
+      } else {
+        if (!silent) {
+          el.bcvNote.textContent = 'No se pudo obtener automáticamente. Usa “Ver BCV”.';
+          setTimeout(() => { el.bcvNote.textContent = originalBcvNote; }, 2600);
+        }
+        setLoading(false);
+        return null;
+      }
+    }
+
+    // Eventos
+    ['input', 'change'].forEach(ev => {
+      el.bcv.addEventListener(ev, () => { calculate(); saveState(); });
+      el.company.addEventListener(ev, () => { calculate(); saveState(); });
+      el.usd.addEventListener(ev, () => { calculate(); saveState(); });
+    });
+
+    el.fetch.addEventListener('click', () => fetchBCVRate(false));
+
+    el.copy.addEventListener('click', async () => {
+      const text = `${el.resultValue.textContent} • ${el.implicit.textContent.replace(/[()]/g, '')}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        el.copy.textContent = 'Copiado';
+        setTimeout(() => el.copy.textContent = 'Copiar resultado', 1400);
+      } catch {
+        el.copy.textContent = 'No se pudo copiar';
+        setTimeout(() => el.copy.textContent = 'Copiar resultado', 1400);
+      }
+    });
+
+    el.reset.addEventListener('click', () => {
+      el.usd.value = '';
+      calculate();
+    });
+
+    // Init
+    (async function init() {
+      const state = loadState();
+      if (!state.bcv) state.bcv = '231.04620000';
+      el.bcv.value = state.bcv ?? '';
+      el.company.value = state.company ?? '';
+      el.usd.value = state.usd ?? '';
+
+      if (state.fetchedAt) {
+        const t = new Date(state.fetchedAt);
+        el.bcvUpdated.textContent = `Actualizado ${t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+      } else {
+        el.bcvUpdated.textContent = '—';
+      }
+
+      calculate();
+      // Obtención silenciosa al cargar
+      fetchBCVRate(true);
+    })();
+  </script>
+</body>
+</html>
