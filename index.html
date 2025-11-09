@@ -624,5 +624,815 @@
 
     calcularYComparar();
   </script>
+
+  <title>💪 Gym Tracker Pro</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --accent: #16a34a;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #e5e7eb;
+      --ring: rgba(37, 99, 235, 0.2);
+      --accent-bg: rgba(22, 163, 74, 0.1);
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --card: #0e1628;
+        --text: #e5e7eb;
+        --muted: #9aa4b2;
+        --border: #182033;
+        --shadow: 0 1px 2px rgba(0,0,0,0.5);
+        --ring: rgba(59,130,246,0.25);
+        --accent-bg: rgba(22, 163, 74, 0.15);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Navegación de días */
+    .day-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .day-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .day-btn:hover {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: var(--primary);
+    }
+
+    .day-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .day-btn .day-name {
+      display: block;
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    /* Cronómetro */
+    .timer-section {
+      background: var(--accent-bg);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .timer-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .timer-display {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: rgba(148,163,184,0.08);
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn.primary:hover {
+      background: #15803d;
+    }
+
+    .btn.danger {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+
+    .btn.sm {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    /* Grupos musculares */
+    .muscle-groups {
+      display: grid;
+      gap: 16px;
+    }
+
+    .muscle-group {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: transparent;
+    }
+
+    .muscle-group-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .muscle-icon {
+      font-size: 24px;
+    }
+
+    .muscle-name {
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .muscle-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Ejercicios */
+    .exercises {
+      display: grid;
+      gap: 12px;
+    }
+
+    .exercise {
+      background: var(--bg);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .exercise-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .exercise-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+
+    .series-tracker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .serie-btn {
+      padding: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .serie-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .serie-btn.done {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .serie-reps {
+      display: block;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .serie-label {
+      display: block;
+      font-size: 10px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    /* Progress */
+    .progress-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .progress-bar-container {
+      background: var(--border);
+      height: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #15803d 100%);
+      transition: width 0.3s ease;
+      border-radius: 8px;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .rest-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+    }
+
+    .rest-overlay.active {
+      display: flex;
+    }
+
+    .rest-content {
+      text-align: center;
+      color: white;
+    }
+
+    .rest-time {
+      font-size: 80px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rest-message {
+      font-size: 20px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 600px) {
+      .timer-display { font-size: 40px; }
+      .rest-time { font-size: 60px; }
+      .series-tracker { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">💪 GYM TRACKER PRO</div>
+      <div class="subtitle">Rutina de hipertrofia para ectomorfos | 4 series progresivas</div>
+    </div>
+
+    <!-- Navegación de días -->
+    <div class="card">
+      <div class="day-nav" id="dayNav"></div>
+    </div>
+
+    <!-- Cronómetro -->
+    <div class="card">
+      <div class="timer-section">
+        <div class="timer-label">⏱️ Cronómetro de descanso</div>
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="timer-controls">
+          <button class="btn primary" onclick="startTimer(60)">1 min</button>
+          <button class="btn primary" onclick="startTimer(90)">1:30 min</button>
+          <button class="btn primary" onclick="startTimer(120)">2 min</button>
+          <button class="btn danger" onclick="stopTimer()">⏹ Parar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rutina del día -->
+    <div id="workoutContent"></div>
+
+    <!-- Progress general -->
+    <div class="card">
+      <div class="progress-section">
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">0% completado hoy</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      💪 Recuerda: la constancia construye músculos. ¡Dale duro! 🔥
+    </div>
+  </div>
+
+  <!-- Overlay de descanso -->
+  <div class="rest-overlay" id="restOverlay">
+    <div class="rest-content">
+      <div class="rest-time" id="restTime">00:00</div>
+      <div class="rest-message">⏸️ Descansando...</div>
+      <button class="btn danger" onclick="stopTimer()">Terminar descanso</button>
+    </div>
+  </div>
+
+  <script>
+    // Rutina semanal completa
+    const ROUTINE = {
+      1: { // Lunes - PUSH (Empuje)
+        name: 'PUSH - Pecho, Hombros, Tríceps',
+        groups: [
+          {
+            name: 'Pecho',
+            icon: '🦾',
+            exercises: [
+              { name: 'Press banca con barra', note: 'Agarre medio, baja controlado hasta el pecho' },
+              { name: 'Press inclinado con mancuernas', note: 'Banco a 30-45°, aprieta al subir' },
+              { name: 'Aperturas en polea (cable cross)', note: 'Brazos ligeramente flexionados, contrae pecho' },
+              { name: 'Fondos en paralelas', note: 'Inclínate hacia adelante para activar pecho' }
+            ]
+          },
+          {
+            name: 'Hombros',
+            icon: '🏔️',
+            exercises: [
+              { name: 'Press militar con mancuernas', note: 'Sentado, espalda recta, sube vertical' },
+              { name: 'Elevaciones laterales con mancuernas', note: 'Codos ligeramente flexionados, sube hasta hombros' },
+              { name: 'Elevaciones frontales en polea', note: 'Agarre bajo, alterna brazos o ambos' }
+            ]
+          },
+          {
+            name: 'Tríceps',
+            icon: '💪',
+            exercises: [
+              { name: 'Press francés con barra Z', note: 'Acostado, baja hacia frente, codos fijos' },
+              { name: 'Extensiones en polea alta (cuerda)', note: 'Separa la cuerda al final del movimiento' },
+              { name: 'Fondos en banco', note: 'Pies elevados, baja controlado' }
+            ]
+          }
+        ]
+      },
+      2: { // Martes - PULL (Tracción)
+        name: 'PULL - Espalda, Bíceps, Abdomen',
+        groups: [
+          {
+            name: 'Espalda',
+            icon: '🦅',
+            exercises: [
+              { name: 'Jalón al pecho en polea', note: 'Agarre ancho, lleva barra al pecho alto' },
+              { name: 'Remo con barra (Pendlay row)', note: 'Torso paralelo, tira hacia abdomen bajo' },
+              { name: 'Remo en polea baja', note: 'Espalda recta, aprieta omóplatos al final' },
+              { name: 'Pullover con mancuerna', note: 'Acostado, brazos semi-extendidos' }
+            ]
+          },
+          {
+            name: 'Bíceps',
+            icon: '💪',
+            exercises: [
+              { name: 'Curl con barra Z', note: 'Codos pegados, contrae en la subida' },
+              { name: 'Curl martillo con mancuernas', note: 'Agarre neutro, alterna o simultáneo' },
+              { name: 'Curl concentrado', note: 'Sentado, codo apoyado en muslo interno' }
+            ]
+          },
+          {
+            name: 'Abdomen',
+            icon: '🔥',
+            exercises: [
+              { name: 'Crunch en polea alta', note: 'Arrodillado, flexiona tronco con control' },
+              { name: 'Elevación de piernas colgado', note: 'Barra fija, sube rodillas al pecho' },
+              { name: 'Plancha abdominal', note: '3 series de 45-60 seg' }
+            ]
+          }
+        ]
+      },
+      3: { // Miércoles - LEGS (Piernas + accesorios)
+        name: 'LEGS - Piernas, Hombros, Core',
+        groups: [
+          {
+            name: 'Piernas',
+            icon: '🦵',
+            exercises: [
+              { name: 'Prensa de piernas', note: 'Pies ancho hombros, baja hasta 90°' },
+              { name: 'Extensiones de cuádriceps', note: 'Sentado, extiende completo y aprieta' },
+              { name: 'Curl femoral acostado', note: 'Boca abajo, talones hacia glúteos' },
+              { name: 'Elevación de gemelos en prensa', note: 'Puntas de pies en borde, rango completo' }
+            ]
+          },
+          {
+            name: 'Hombros (posterior)',
+            icon: '🏔️',
+            exercises: [
+              { name: 'Pájaros con mancuernas', note: 'Inclinado, codos atrás, aprieta omóplatos' },
+              { name: 'Face pulls en polea', note: 'Tira hacia cara, codos altos' }
+            ]
+          },
+          {
+            name: 'Abdomen',
+            icon: '🔥',
+            exercises: [
+              { name: 'Abdominales en banco declinado', note: 'Manos en pecho o cabeza' },
+              { name: 'Giros rusos con disco', note: 'Sentado, torso inclinado, rota' }
+            ]
+          }
+        ]
+      },
+      4: { // Jueves - PUSH variado
+        name: 'PUSH 2 - Pecho, Tríceps, Hombros',
+        groups: [
+          {
+            name: 'Pecho',
+            icon: '🦾',
+            exercises: [
+              { name: 'Press banca con mancuernas', note: 'Mayor rango de movimiento que barra' },
+              { name: 'Press declinado con barra', note: 'Banco a -30°, enfoca pecho inferior' },
+              { name: 'Peck deck (mariposa)', note: 'Máquina contractora, aprieta 1 seg' },
+              { name: 'Flexiones con lastre', note: 'Chaleco o disco en espalda' }
+            ]
+          },
+          {
+            name: 'Tríceps',
+            icon: '💪',
+            exercises: [
+              { name: 'Press cerrado en banca', note: 'Manos juntas, codos cerca del cuerpo' },
+              { name: 'Extensiones sobre cabeza con mancuerna', note: 'De pie o sentado, codos arriba' },
+              { name: 'Patada de tríceps con mancuerna', note: 'Inclinado, extiende hacia atrás' }
+            ]
+          },
+          {
+            name: 'Hombros (lateral)',
+            icon: '🏔️',
+            exercises: [
+              { name: 'Elevaciones laterales en polea', note: 'Unilateral, cruza por delante' },
+              { name: 'Press Arnold', note: 'Rota palmas mientras subes' }
+            ]
+          }
+        ]
+      },
+      5: { // Viernes - PULL 2
+        name: 'PULL 2 - Espalda, Bíceps, Abdomen',
+        groups: [
+          {
+            name: 'Espalda',
+            icon: '🦅',
+            exercises: [
+              { name: 'Dominadas con agarre ancho', note: 'Si no puedes, usa máquina asistida' },
+              { name: 'Remo con mancuernas (unilateral)', note: 'Rodilla en banco, tira hacia cadera' },
+              { name: 'Jalón con agarre cerrado', note: 'Agarre estrecho, activa dorsales bajos' },
+              { name: 'Encogimientos con mancuernas', note: 'Trapecios, sube hombros vertical' }
+            ]
+          },
+          {
+            name: 'Bíceps',
+            icon: '💪',
+            exercises: [
+              { name: 'Curl en polea baja', note: 'Cuerda o barra, tensión constante' },
+              { name: 'Curl en banco inclinado', note: 'Banco a 45°, brazos cuelgan atrás' },
+              { name: 'Curl 21s', note: '7 abajo-medio, 7 medio-arriba, 7 completas' }
+            ]
+          },
+          {
+            name: 'Abdomen',
+            icon: '🔥',
+            exercises: [
+              { name: 'Rueda abdominal', note: 'De rodillas, extiende y regresa' },
+              { name: 'Bicicleta abdominal', note: 'Acostado, codo a rodilla opuesta' },
+              { name: 'Plancha lateral', note: '3 series de 30-45 seg por lado' }
+            ]
+          }
+        ]
+      },
+      6: { // Sábado - FULLBODY
+        name: 'FULLBODY - Piernas, Pecho, Espalda',
+        groups: [
+          {
+            name: 'Piernas',
+            icon: '🦵',
+            exercises: [
+              { name: 'Prensa inclinada', note: 'Variante de prensa, pies más altos' },
+              { name: 'Zancadas con mancuernas', note: 'Estáticas o caminando' },
+              { name: 'Curl femoral sentado', note: 'Variante sentado, mayor aislamiento' },
+              { name: 'Elevación de gemelos de pie', note: 'Máquina específica o Smith' }
+            ]
+          },
+          {
+            name: 'Pecho',
+            icon: '🦾',
+            exercises: [
+              { name: 'Press en máquina (Hammer)', note: 'Agarre neutro, empuje unilateral o bilateral' },
+              { name: 'Cruces con mancuernas', note: 'Banco plano, brazos abiertos' }
+            ]
+          },
+          {
+            name: 'Espalda',
+            icon: '🦅',
+            exercises: [
+              { name: 'Jalón con agarre invertido', note: 'Palmas hacia ti, activa bíceps también' },
+              { name: 'Remo en máquina', note: 'Pecho apoyado, tira hacia ti' }
+            ]
+          }
+        ]
+      }
+    };
+
+    // Estado
+    let currentDay = new Date().getDay(); // 0=Domingo, 1=Lunes...
+    if (currentDay === 0) currentDay = 1; // Si es domingo, mostrar lunes
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let completedSeries = {};
+
+    // Inicializar
+    function init() {
+      renderDayNav();
+      loadProgress();
+      renderWorkout();
+    }
+
+    // Renderizar navegación de días
+    function renderDayNav() {
+      const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const nav = document.getElementById('dayNav');
+      nav.innerHTML = days.map((day, i) => `
+        <button class="day-btn ${currentDay === i + 1 ? 'active' : ''}" onclick="changeDay(${i + 1})">
+          ${day}
+          <span class="day-name">${ROUTINE[i + 1].name.split(' - ')[0]}</span>
+        </button>
+      `).join('');
+    }
+
+    // Cambiar día
+    function changeDay(day) {
+      currentDay = day;
+      renderDayNav();
+      renderWorkout();
+    }
+
+    // Renderizar rutina del día
+    function renderWorkout() {
+      const workout = ROUTINE[currentDay];
+      const content = document.getElementById('workoutContent');
+      
+      content.innerHTML = `
+        <div class="card">
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center;">
+            ${workout.name}
+          </h2>
+          <div class="muscle-groups">
+            ${workout.groups.map((group, gIdx) => `
+              <div class="muscle-group">
+                <div class="muscle-group-header">
+                  <span class="muscle-icon">${group.icon}</span>
+                  <span class="muscle-name">${group.name}</span>
+                  <span class="muscle-badge">${group.exercises.length} ejercicios</span>
+                </div>
+                <div class="exercises">
+                  ${group.exercises.map((ex, eIdx) => `
+                    <div class="exercise">
+                      <div class="exercise-name">${ex.name}</div>
+                      <div class="exercise-note">${ex.note}</div>
+                      <div class="series-tracker">
+                        ${[12, 10, 8, 8].map((reps, sIdx) => {
+                          const key = `${currentDay}-${gIdx}-${eIdx}-${sIdx}`;
+                          const isDone = completedSeries[key] || false;
+                          return `
+                            <button class="serie-btn ${isDone ? 'done' : ''}" onclick="toggleSerie('${key}')">
+                              <span class="serie-reps">${reps}</span>
+                              <span class="serie-label">rep</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      updateProgress();
+    }
+
+    // Toggle serie completada
+    function toggleSerie(key) {
+      completedSeries[key] = !completedSeries[key];
+      saveProgress();
+      renderWorkout();
+      
+      // Auto-iniciar timer si se completa una serie
+      if (completedSeries[key]) {
+        startTimer(90); // 1:30 por defecto
+      }
+    }
+
+    // Cronómetro
+    function startTimer(seconds) {
+      stopTimer();
+      timerSeconds = seconds;
+      updateTimerDisplay();
+      document.getElementById('restOverlay').classList.add('active');
+      
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        
+        if (timerSeconds <= 0) {
+          stopTimer();
+          // Vibración si está disponible
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('restOverlay').classList.remove('active');
+      timerSeconds = 0;
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      document.getElementById('timerDisplay').textContent = timeStr;
+      document.getElementById('restTime').textContent = timeStr;
+    }
+
+    // Progreso
+    function updateProgress() {
+      const workout = ROUTINE[currentDay];
+      const totalSeries = workout.groups.reduce((sum, g) => sum + g.exercises.length * 4, 0);
+      const completed = Object.keys(completedSeries).filter(k => {
+        return k.startsWith(`${currentDay}-`) && completedSeries[k];
+      }).length;
+      
+      const percent = Math.round((completed / totalSeries) * 100);
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = `${percent}% completado hoy (${completed}/${totalSeries} series)`;
+    }
+
+    // Persistencia
+    function saveProgress() {
+      localStorage.setItem('gymProgress', JSON.stringify(completedSeries));
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem('gymProgress');
+      if (saved) {
+        completedSeries = JSON.parse(saved);
+      }
+    }
+
+    // Reset diario automático
+    function checkDailyReset() {
+      const lastDate = localStorage.getItem('lastGymDate');
+      const today = new Date().toDateString();
+      
+      if (lastDate !== today) {
+        // Limpiar progreso del día anterior
+        const keys = Object.keys(completedSeries);
+        keys.forEach(k => {
+          if (k.startsWith(`${currentDay}-`)) {
+            delete completedSeries[k];
+          }
+        });
+        saveProgress();
+        localStorage.setItem('lastGymDate', today);
+      }
+    }
+
+    // Init
+    checkDailyReset();
+    init();
+  </script>
 </body>
 </html>
+
